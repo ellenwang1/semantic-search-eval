@@ -1,4 +1,8 @@
+from utils import map_esci
 import pandas as pd
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__) 
 
 def load_dataset(split, product_locale):
     '''
@@ -50,4 +54,25 @@ def preprocess_dataset(df):
     '''
     Assert data is clean, no outliers in training.
     Return df so that only ['query', 'title', 'description', 'relevance'] are in the columns.'''
-    pass    
+
+    # Ensure no duplicates
+    duplicates = df[df.duplicated(subset=["query", "product_title"])]
+    logging.info(f'There are {len(duplicates)} duplicates in this dataset.')
+
+    # TODO: Ensure no really short queries that are not very specific
+
+    # Map ESCI to relevance
+    esci_weighting = {
+        'E': 3,
+        'S': 2,
+        'C': 1,
+        'I': 0
+    }
+    df['relevance'] = df['esci_label'].map(esci_weighting)
+    # Isolate query, title, description, relevance
+    preprocessed_df = df[['query', 'product_title', 'product_description', 'relevance']]
+    
+    logging.info('We are expecting four columns in the preprocessed df.')
+    logging.info(f'There are {len(preprocessed_df)} columns in the preprocessed df')
+
+    return preprocessed_df
