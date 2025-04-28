@@ -1,6 +1,10 @@
-from src.preprocess import load_dataset, preprocess_dataset
-from src.evaluation import compute_similarity_scores, compute_metrics
-from src.visualisation import visualise_model_performance
+from preprocess import load_dataset, preprocess_dataset
+from evaluation import compute_similarity_scores, compute_metrics
+from visualisation import visualise_model_performance
+from sentence_transformers import SentenceTransformer
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def main():
     ''' Main function structure:
@@ -15,12 +19,14 @@ def main():
     #TODO: add decision criteria after working e2e
     #TODO: add file input to change out models?
     chosen_model = 'sentence-transformers/paraphrase-MiniLM-L6-v2'
-    model = SentenceTransformer(model_name)
+    model = SentenceTransformer(chosen_model)
+    logging.info(f"{model} loaded with info: {model._model_card_text}")
 
     # 2. load dataset, parameterise for split and locale
-    df = load_dataset(split='all', locale='us')
-    df_train = load_dataset(split='train', locale='us')
-    df_test = load_dataset(split='test', locale='us')
+    df = load_dataset(split='all', product_locale='us')
+    df_train = load_dataset(split='train', product_locale='us')
+    df_test = load_dataset(split='test', product_locale='us')
+    logging.info(f"Dataset loaded with {len(df)} rows.")
 
     # 3. preprocess dataset, isolate query, title, description, relevance
     df_clean = preprocess_dataset(df)
