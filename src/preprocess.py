@@ -79,8 +79,6 @@ def preprocess_dataset(df):
     logging.info(
         f'There are {len(df_not_nan)} non-nan product descriptions in this dataset.')
 
-    # TODO: Ensure no really short queries that are not very specific
-
     # Map ESCI to relevance
     esci_weighting = {
         'E': 3,
