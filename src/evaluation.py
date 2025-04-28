@@ -1,6 +1,5 @@
-from sklearn.metrics.pairwise import cosine_similarity
+import torch.nn.functional as F
 from ranx import Qrels, Run, evaluate
-from scipy.sparse import csr_matrix
 import numpy as np
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -10,36 +9,52 @@ def compute_similarity_scores(model, df):
     '''
     Compute similarity between user query and product_doc.
     product_doc is the addition between title and description'''
-    df['product_doc'] = df['product_title'] + ' ' + df['product_description']
-    query_embeddings = model.encode(df['query'].tolist(), convert_to_tensor=True)
-    doc_embeddings = model.encode(df['product_title'].tolist(), convert_to_tensor=True)
-    sparse_query_embeddings = csr_matrix(query_embeddings)
-    sparse_doc_embeddings = csr_matrix(doc_embeddings)
-    similarities_mx = cosine_similarity(np.array(sparse_query_embeddings), np.array(sparse_doc_embeddings))
-    similarities_diag = np.diag(similarities_mx)
-    return similarities_diag
+    query_embeddings = model.encode(df['query'].tolist(), convert_to_tensor=True).cpu()
+    doc_embeddings = model.encode(df['product_doc'].tolist(), convert_to_tensor=True).cpu()
+    logging.info("Embeddings complete")
+    logging.info(f'Query shape: {query_embeddings.shape}')
+    logging.info(f'Doc shape: {doc_embeddings.shape}')
+    similarities_diag = F.cosine_similarity(query_embeddings, doc_embeddings)
+    logging.info(f'Similarities matrix shape: {similarities_diag.shape}')
+    # convert back to np for ease of calculations later
+    similarities_np = similarities_diag.cpu().numpy()
+    similarities_np = np.round(similarities_np, 2)
+    return similarities_np
 
-def compute_metrics(df, similarities_diag):
+def compute_metrics(df):
     '''
     Compute ndcg, recall and mrr and return'''
     qrels_dict = {}
     run_dict = {}
 
-    for query, group in df.groupby("query"):
-        query = str(query)
+    for query_id, group in df.groupby("query_id"):
+        query_id = str(query_id)
         # get actuals
-        qrels_dict[query] = {str(example): int(relevance) for example, relevance in zip(group["example_id"], group["relevance"])}
+        qrels_dict[query_id] = {str(doc_id): int(relevance) for doc_id, relevance in zip(group["example_id"], group["relevance"])}
         
-        # get scores paired to each example
-        examples = group["example_id"].tolist()
-        example_score_pairs = list(zip(examples, similarities_diag[:len(examples)]))
+        # get scores paired to each doc
+        docs = group["example_id"].tolist()
+        similarity_scores = group['similarity_scores'].tolist()
+        logger.info(f'{len(docs)}')
+        logger.info(f'{len(similarity_scores)}')
+        doc_score_pairs = list(zip(docs, similarity_scores))
 
         # get predicted
-        run_dict[query] = {str(example): score for example, score in example_score_pairs}
+        run_dict[query_id] = {str(doc): score for doc, score in doc_score_pairs}
+
+    logging.info("Exit qrels_dict and run_dict loop")
 
     qrels = Qrels(qrels_dict)
+    logging.info("Create qrels object")
+    logging.info(f"Similarity scores: {similarity_scores}")
     run = Run(run_dict)
+    logging.info("Create run object")
 
-    ndcg10, recall10, mrr10 = evaluate(qrels, run, metrics=["ndcg@10", "recall@10", "mrr@10"])
+    dict_results = evaluate(qrels, run, metrics=["ndcg@10", "recall@10", "mrr@10"])
+    logging.info("Calculate metrics")
+
+    ndcg10 = dict_results["ndcg@10"]
+    recall10 = dict_results["recall@10"]
+    mrr10 = dict_results["mrr@10"]
 
     return ndcg10, recall10, mrr10

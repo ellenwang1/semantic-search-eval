@@ -13,7 +13,6 @@ def load_dataset(split, product_locale):
     '''
     df_examples = pd.read_parquet('./data/shopping_queries_dataset_examples.parquet')
     df_products = pd.read_parquet('./data/shopping_queries_dataset_products.parquet')
-    df_sources = pd.read_csv("./data/shopping_queries_dataset_sources.csv")
     
     # https://github.com/amazon-science/esci-data: suggested filter for task 1: Query-Product Ranking 
     # Query-Product Ranking: Given a user specified query and a list of matched products, the goal of this 
@@ -79,10 +78,12 @@ def preprocess_dataset(df):
         'I': 0
     }
     df_not_nan['relevance'] = df_not_nan['esci_label'].map(esci_weighting)
+    df_not_nan['product_doc'] = df_not_nan['product_title'] + ' ' + df_not_nan['product_description']
+
     # Isolate query, title, description, relevance
-    preprocessed_df = df_not_nan[['query', 'product_title', 'product_description', 'relevance']]
+    preprocessed_df = df_not_nan[['query_id', 'query', 'example_id', 'product_title', 'product_description', 'product_doc', 'relevance']]
     
-    logging.info('We are expecting 4 columns in the preprocessed df.')
+    logging.info('We are expecting 5 columns in the preprocessed df.')
     logging.info(f'There are {len(preprocessed_df.columns)} columns in the preprocessed df')
 
     return preprocessed_df
