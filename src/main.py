@@ -20,7 +20,7 @@ def main():
     #TODO: add file input to change out models?
     chosen_model = 'sentence-transformers/paraphrase-MiniLM-L6-v2'
     model = SentenceTransformer(chosen_model)
-    logging.info(f"{model} loaded with info: {model._model_card_text}")
+    logging.info(f"{model} loaded with info: {model.model_card_data}")
 
     # 2. load dataset, parameterise for split and locale
     df = load_dataset(split='all', product_locale='us')
