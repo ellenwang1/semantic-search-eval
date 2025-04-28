@@ -1,4 +1,3 @@
-from utils import map_esci
 import pandas as pd
 import logging
 logging.basicConfig(level=logging.INFO)
