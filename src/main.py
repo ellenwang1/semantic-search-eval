@@ -6,6 +6,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def main():
     ''' Main function structure:
     1. Choose and load model
@@ -16,8 +17,8 @@ def main():
     '''
 
     # 1. choose and load model
-    #TODO: add decision criteria after working e2e
-    #TODO: add file input to change out models?
+    # TODO: add decision criteria after working e2e
+    # TODO: add file input to change out models?
     chosen_model = 'sentence-transformers/paraphrase-MiniLM-L6-v2'
     model = SentenceTransformer(chosen_model)
 
@@ -43,10 +44,11 @@ def main():
     logging.info(f"Recall Metric: {recall10}.")
     logging.info(f"MRR Metric: {mrr10}.")
 
-    #TODO: evaluate on test?
+    # TODO: evaluate on test?
 
-    #5. create visualisations for final metrics
+    # 5. create visualisations for final metrics
     visualise_model_performance()
+
 
 if __name__ == "__main__":
     main()
