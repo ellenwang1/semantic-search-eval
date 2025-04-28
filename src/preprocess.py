@@ -56,7 +56,18 @@ def preprocess_dataset(df):
 
     # Ensure no duplicates
     duplicates = df[df.duplicated(subset=["query", "product_title"])]
+    logging.info(f'There are {len(df)} rows in this dataset.')
     logging.info(f'There are {len(duplicates)} duplicates in this dataset.')
+
+    df_deduplicated = df.drop_duplicates(subset=['query', 'product_title'])
+    logging.info(f'There are {len(df_deduplicated)} deduplicated rows in this dataset.')
+    
+    # Drop all rows where product description is nan
+    df_nan = df_deduplicated[df_deduplicated['product_description'].isna()]
+    logging.info(f'There are {len(df_nan)} nan product descriptions in this dataset.')
+
+    df_not_nan = df_deduplicated[df_deduplicated['product_description'].notna()]
+    logging.info(f'There are {len(df_not_nan)} non-nan product descriptions in this dataset.')
 
     # TODO: Ensure no really short queries that are not very specific
 
@@ -67,11 +78,11 @@ def preprocess_dataset(df):
         'C': 1,
         'I': 0
     }
-    df['relevance'] = df['esci_label'].map(esci_weighting)
+    df_not_nan['relevance'] = df_not_nan['esci_label'].map(esci_weighting)
     # Isolate query, title, description, relevance
-    preprocessed_df = df[['query', 'product_title', 'product_description', 'relevance']]
+    preprocessed_df = df_not_nan[['query', 'product_title', 'product_description', 'relevance']]
     
-    logging.info('We are expecting four columns in the preprocessed df.')
-    logging.info(f'There are {len(preprocessed_df)} columns in the preprocessed df')
+    logging.info('We are expecting 4 columns in the preprocessed df.')
+    logging.info(f'There are {len(preprocessed_df.columns)} columns in the preprocessed df')
 
     return preprocessed_df

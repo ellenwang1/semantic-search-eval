@@ -23,19 +23,22 @@ def main():
     logging.info(f"{model} loaded with info: {model.model_card_data}")
 
     # 2. load dataset, parameterise for split and locale
-    df = load_dataset(split='all', product_locale='us')
+    # df = load_dataset(split='all', product_locale='us')
     df_train = load_dataset(split='train', product_locale='us')
-    df_test = load_dataset(split='test', product_locale='us')
-    logging.info(f"Dataset loaded with {len(df)} rows.")
+    # df_test = load_dataset(split='test', product_locale='us')
+    logging.info(f"Dataset loaded with {len(df_train)} rows.")
 
     # 3. preprocess dataset, isolate query, title, description, relevance
-    df_clean = preprocess_dataset(df)
+    # df_clean = preprocess_dataset(df)
     df_train_clean = preprocess_dataset(df_train)
-    df_test_clean = preprocess_dataset(df_test)
+    # df_test_clean = preprocess_dataset(df_test)
 
     # 4. evaluate model, get similarity scores
-    similarity_scores = compute_similarity_scores(df_train_clean)
-    ndcg10, recall10, mrr10 = compute_metrics(df_train_clean, similarity_scores)
+    similarity_scores = compute_similarity_scores(model, df_train_clean)
+    ndcg10, recall10, mrr10 = compute_metrics(df_train_clean, similarity_scores, k=10)
+    logging.info(f"NDCG Metric: {ndcg10}.")
+    logging.info(f"Recall Metric: {recall10}.")
+    logging.info(f"MRR Metric: {mrr10}.")
 
     #TODO: evaluate on test?
 
