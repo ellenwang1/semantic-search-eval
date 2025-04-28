@@ -1,5 +1,6 @@
 from sklearn.metrics.pairwise import cosine_similarity
 from ranx import Qrels, Run, evaluate
+from scipy.sparse import csr_matrix
 import numpy as np
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -12,7 +13,9 @@ def compute_similarity_scores(model, df):
     df['product_doc'] = df['product_title'] + ' ' + df['product_description']
     query_embeddings = model.encode(df['query'].tolist(), convert_to_tensor=True)
     doc_embeddings = model.encode(df['product_title'].tolist(), convert_to_tensor=True)
-    similarities_mx = cosine_similarity(np.array(query_embeddings), np.array(doc_embeddings))
+    sparse_query_embeddings = csr_matrix(query_embeddings)
+    sparse_doc_embeddings = csr_matrix(doc_embeddings)
+    similarities_mx = cosine_similarity(np.array(sparse_query_embeddings), np.array(sparse_doc_embeddings))
     similarities_diag = np.diag(similarities_mx)
     return similarities_diag
 
