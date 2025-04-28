@@ -35,18 +35,13 @@ def compute_metrics(df):
         # get scores paired to each doc
         docs = group["example_id"].tolist()
         similarity_scores = group['similarity_scores'].tolist()
-        logger.info(f'{len(docs)}')
-        logger.info(f'{len(similarity_scores)}')
         doc_score_pairs = list(zip(docs, similarity_scores))
 
         # get predicted
         run_dict[query_id] = {str(doc): score for doc, score in doc_score_pairs}
 
-    logging.info("Exit qrels_dict and run_dict loop")
-
     qrels = Qrels(qrels_dict)
     logging.info("Create qrels object")
-    logging.info(f"Similarity scores: {similarity_scores}")
     run = Run(run_dict)
     logging.info("Create run object")
 
