@@ -25,7 +25,7 @@ def compute_similarity_scores(model, df):
     return similarities_np
 
 
-def compute_metrics(df):
+def compute_metrics(df, k):
     '''
     Compute ndcg, recall and mrr and return'''
     qrels_dict = {}
@@ -34,8 +34,11 @@ def compute_metrics(df):
     for query_id, group in df.groupby("query_id"):
         query_id = str(query_id)
         # get actuals
-        qrels_dict[query_id] = {str(doc_id): int(relevance) for doc_id, relevance in zip(
-            group["example_id"], group["relevance"])}
+        qrels_dict[query_id] = {
+            str(doc_id): int(relevance) for doc_id, relevance in zip(
+                group["example_id"], group["relevance"]
+            )
+        }
 
         # get scores paired to each doc
         docs = group["example_id"].tolist()
@@ -52,11 +55,11 @@ def compute_metrics(df):
     logging.info("Create run object")
 
     dict_results = evaluate(qrels, run, metrics=[
-                            "ndcg@10", "recall@10", "mrr@10"])
+                            f"ndcg@{k}", f"recall@{k}", f"mrr@{k}"])
     logging.info("Calculate metrics")
 
-    ndcg10 = dict_results["ndcg@10"]
-    recall10 = dict_results["recall@10"]
-    mrr10 = dict_results["mrr@10"]
+    ndcgk = dict_results[f"ndcg@{k}"]
+    recallk = dict_results[f"recall@{k}"]
+    mrrk = dict_results[f"mrr@{k}"]
 
-    return ndcg10, recall10, mrr10
+    return ndcgk, recallk, mrrk

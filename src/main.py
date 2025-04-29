@@ -24,18 +24,20 @@ def main():
     df_train = load_dataset(split='train', product_locale='us')
     logging.info(f"Dataset loaded with {len(df_train)} rows.")
 
-    # 3. preprocess dataset, isolate query, title, description, relevance
-    # df_clean = preprocess_dataset(df)
+    # 3. preprocess dataset, sample, isolate query, title, description, relevance
     df_train_clean = preprocess_dataset(df_train)
-    logging.info(f"Cleaned dataset rows: {len(df_train_clean)}")
-    logging.info(f"Unique queries: {df_train_clean["query_id"].nunique()}")
-    # df_test_clean = preprocess_dataset(df_test)
+    # get all unique query ids and sample 200 of them
+    unique_query_ids = df_train_clean['query_id'].unique()
+    random_query_ids = pd.Series(unique_query_ids).sample(n=200, random_state=42).tolist()
+    df_train_clean_sample = df_train_clean[df_train_clean['query_id'].isin(random_query_ids)]
+    logging.info(f"Cleaned dataset rows: {len(df_train_clean_sample)}")
+    logging.info(f"Unique queries: {df_train_clean_sample["query_id"].nunique()}")
 
     # 4. evaluate model, get similarity scores
-    similarity_scores = compute_similarity_scores(model, df_train_clean)
+    similarity_scores = compute_similarity_scores(model, df_train_clean_sample)
     logging.info("Similarity calculation complete")
-    df_train_clean['similarity_scores'] = similarity_scores
-    ndcg10_train, recall10_train, mrr10_train = compute_metrics(df_train_clean)
+    df_train_clean_sample['similarity_scores'] = similarity_scores
+    ndcg10_train, recall10_train, mrr10_train = compute_metrics(df_train_clean_sample, k=10)
     logging.info(f"NDCG Metric train: {ndcg10_train}.")
     logging.info(f"Recall Metric train: {recall10_train}.")
     logging.info(f"MRR Metric train: {mrr10_train}.")
@@ -43,12 +45,28 @@ def main():
     # Do the same thing for the test set
     df_test = load_dataset(split='test', product_locale='us')
     df_test_clean = preprocess_dataset(df_test)
-    similarity_scores = compute_similarity_scores(model, df_test_clean)
-    df_test_clean['similarity_scores'] = similarity_scores
-    ndcg10_test, recall10_test, mrr10_test = compute_metrics(df_test_clean)
-    logging.info(f"NDCG Metric train: {ndcg10_test}.")
-    logging.info(f"Recall Metric train: {recall10_test}.")
-    logging.info(f"MRR Metric train: {mrr10_test}.")
+    unique_query_ids = df_test_clean['query_id'].unique()
+    random_query_ids = pd.Series(unique_query_ids).sample(n=200, random_state=42).tolist()
+    df_test_clean_sample = df_test_clean[df_test_clean['query_id'].isin(random_query_ids)]
+    similarity_scores = compute_similarity_scores(model, df_test_clean_sample)
+    df_test_clean_sample['similarity_scores'] = similarity_scores
+    ndcg10_test, recall10_test, mrr10_test = compute_metrics(df_test_clean_sample, k=10)
+    logging.info(f"NDCG Metric test: {ndcg10_test}.")
+    logging.info(f"Recall Metric test: {recall10_test}.")
+    logging.info(f"MRR Metric test: {mrr10_test}.")
+
+    # Add baseline calculations at k=5
+    df_test = load_dataset(split='test', product_locale='us')
+    df_test_clean = preprocess_dataset(df_test)
+    unique_query_ids = df_test_clean['query_id'].unique()
+    random_query_ids = pd.Series(unique_query_ids).sample(n=200, random_state=42).tolist()
+    df_test_clean_sample = df_test_clean[df_test_clean['query_id'].isin(random_query_ids)]
+    similarity_scores = compute_similarity_scores(model, df_test_clean_sample)
+    df_test_clean_sample['similarity_scores'] = similarity_scores
+    ndcg5_test, recall5_test, mrr5_test = compute_metrics(df_test_clean_sample, k=5)
+    logging.info(f"NDCG Metric test: {ndcg5_test}.")
+    logging.info(f"Recall Metric test: {recall5_test}.")
+    logging.info(f"MRR Metric test: {mrr5_test}.")
 
     metrics_dict = {
         "ndcg10_train": ndcg10_train,
@@ -57,9 +75,11 @@ def main():
         "ndcg10_test": ndcg10_test,
         "recall10_test": recall10_test,
         "mrr10_test": mrr10_test,
+        "ndcg5_test": ndcg5_test,
+        "recall5_test": recall5_test,
+        "mrr5_test": mrr5_test,
     }
-    metrics_df = pd.DataFrame(metrics_dict)
-
+    metrics_df = pd.DataFrame([metrics_dict])
     metrics_df.to_csv('reports/metrics_summary.csv')
 
 
