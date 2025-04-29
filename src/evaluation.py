@@ -1,4 +1,4 @@
-import torch.nn.functional as F
+from torch.nn.functional import cosine_similarity
 from ranx import Qrels, Run, evaluate
 import numpy as np
 import logging
@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 def compute_similarity_scores(model, df):
     '''
     Compute similarity between user query and product_doc.
-    product_doc is the addition between title and description'''
+    product_doc is the addition between title and description
+    '''
     query_embeddings = model.encode(
         df['query'].tolist(), convert_to_tensor=True).cpu()
     doc_embeddings = model.encode(
@@ -17,7 +18,7 @@ def compute_similarity_scores(model, df):
     logging.info("Embeddings complete")
     logging.info(f'Query shape: {query_embeddings.shape}')
     logging.info(f'Doc shape: {doc_embeddings.shape}')
-    similarities_diag = F.cosine_similarity(query_embeddings, doc_embeddings)
+    similarities_diag = cosine_similarity(query_embeddings, doc_embeddings)
     logging.info(f'Similarities matrix shape: {similarities_diag.shape}')
     # convert back to np for ease of calculations later
     similarities_np = similarities_diag.cpu().numpy()
@@ -27,7 +28,8 @@ def compute_similarity_scores(model, df):
 
 def compute_metrics(df, k):
     '''
-    Compute ndcg, recall and mrr and return'''
+    Compute ndcg, recall and mrr and return at any top k
+    '''
     qrels_dict = {}
     run_dict = {}
 

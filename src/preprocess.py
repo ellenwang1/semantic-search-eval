@@ -12,9 +12,9 @@ def load_dataset(split, product_locale):
     split: ['all', 'train', 'test']
     locale: ['us', 'all']
     '''
-    df_examples = pd.read_parquet(
+    INPUT_EXAMPLES = pd.read_parquet(
         './data/shopping_queries_dataset_examples.parquet')
-    df_products = pd.read_parquet(
+    INPUT_PRODUCTS = pd.read_parquet(
         './data/shopping_queries_dataset_products.parquet')
 
     # https://github.com/amazon-science/esci-data: suggested filter for
@@ -24,8 +24,8 @@ def load_dataset(split, product_locale):
     # products so that the relevant products are ranked above the
     # non-relevant ones.
     df_examples_products = pd.merge(
-        df_examples,
-        df_products,
+        INPUT_EXAMPLES,
+        INPUT_PRODUCTS,
         how='left',
         left_on=['product_locale', 'product_id'],
         right_on=['product_locale', 'product_id']
@@ -37,28 +37,21 @@ def load_dataset(split, product_locale):
     df_task_1_test = df_task_1_all[df_task_1_all["split"] == "test"]
 
     # split into locale
-    df_task_1_all_us = df_task_1_all[df_task_1_all['product_locale'] == 'us']
     df_task_1_train_us = df_task_1_train[df_task_1_train['product_locale'] == 'us']
     df_task_1_test_us = df_task_1_test[df_task_1_test['product_locale'] == 'us']
 
     if split == 'train' and product_locale == 'us':
         return df_task_1_train_us
-    elif split == 'train' and product_locale == 'all':
-        return df_task_1_train
-    elif split == 'test' and product_locale == 'us':
-        return df_task_1_test_us
-    elif split == 'test' and product_locale == 'all':
-        return df_task_1_test
-    elif split == 'all' and product_locale == 'us':
-        return df_task_1_all_us
     else:
-        return df_task_1_all
+        return df_task_1_test_us
+
 
 
 def preprocess_dataset(df):
     '''
     Assert data is clean, no outliers in training.
-    Return df so that only ['query', 'title', 'description', 'relevance'] are in the columns.'''
+    Return df so that only ['query', 'title', 'description', 'relevance'] are in the columns.
+    '''
 
     # Ensure no duplicates
     duplicates = df[df.duplicated(subset=["query", "product_title"])]
@@ -94,7 +87,7 @@ def preprocess_dataset(df):
     preprocessed_df = df_not_nan[['query_id', 'query', 'example_id',
                                   'product_title', 'product_description', 'product_doc', 'relevance']]
 
-    logging.info('We are expecting 5 columns in the preprocessed df.')
+    logging.info('We are expecting 7 columns in the preprocessed df.')
     logging.info(
         f'There are {len(preprocessed_df.columns)} columns in the preprocessed df')
 

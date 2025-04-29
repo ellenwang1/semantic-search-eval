@@ -38,9 +38,6 @@ def main():
     logging.info("Similarity calculation complete")
     df_train_clean_sample['similarity_scores'] = similarity_scores
     ndcg10_train, recall10_train, mrr10_train = compute_metrics(df_train_clean_sample, k=10)
-    logging.info(f"NDCG Metric train: {ndcg10_train}.")
-    logging.info(f"Recall Metric train: {recall10_train}.")
-    logging.info(f"MRR Metric train: {mrr10_train}.")
 
     # Do the same thing for the test set
     df_test = load_dataset(split='test', product_locale='us')
@@ -51,9 +48,6 @@ def main():
     similarity_scores = compute_similarity_scores(model, df_test_clean_sample)
     df_test_clean_sample['similarity_scores'] = similarity_scores
     ndcg10_test, recall10_test, mrr10_test = compute_metrics(df_test_clean_sample, k=10)
-    logging.info(f"NDCG Metric test: {ndcg10_test}.")
-    logging.info(f"Recall Metric test: {recall10_test}.")
-    logging.info(f"MRR Metric test: {mrr10_test}.")
 
     # Add baseline calculations at k=5
     df_test = load_dataset(split='test', product_locale='us')
@@ -64,9 +58,6 @@ def main():
     similarity_scores = compute_similarity_scores(model, df_test_clean_sample)
     df_test_clean_sample['similarity_scores'] = similarity_scores
     ndcg5_test, recall5_test, mrr5_test = compute_metrics(df_test_clean_sample, k=5)
-    logging.info(f"NDCG Metric test: {ndcg5_test}.")
-    logging.info(f"Recall Metric test: {recall5_test}.")
-    logging.info(f"MRR Metric test: {mrr5_test}.")
 
     metrics_dict = {
         "ndcg10_train": ndcg10_train,
@@ -80,6 +71,7 @@ def main():
         "mrr5_test": mrr5_test,
     }
     metrics_df = pd.DataFrame([metrics_dict])
+    logging.info(f"Metrics df: {metrics_df}.")
     metrics_df.to_csv('reports/metrics_summary.csv')
 
 
